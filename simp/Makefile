@@ -1,5 +1,5 @@
 EXEC = glucose
-DEPDIR    = mtl utils core
+DEPDIR    = mtl sp utils core
 MROOT = $(PWD)/..
 
 include $(MROOT)/mtl/template.mk

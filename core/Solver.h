@@ -218,6 +218,7 @@ public:
 
     // Constant for heuristic
     double    var_decay;
+    double    alpha;              // Alpha parameter for SP heuristic
     double    max_var_decay;
     double    clause_decay;
     double    random_var_freq;
@@ -350,7 +351,8 @@ protected:
     Heap<VarOrderLt>    order_heap;       // A priority queue of variables ordered with respect to the variable activity.
     double              progress_estimate;// Set by 'search()'.
     bool                remove_satisfied; // Indicates whether possibly inefficient linear scan for satisfied clauses should be performed in 'simplify'.
-    vec<unsigned int>   permDiff;           // permDiff[var] contains the current conflict number... Used to count the number of  LBD
+    vec<unsigned int>   permDiff;         // permDiff[var] contains the current conflict number... Used to count the number of  LBD
+    int                 assignPerStep;    // Num variables to assign on each SP step     
     
 
     // UPDATEVARACTIVITY trick (see competition'09 companion paper)

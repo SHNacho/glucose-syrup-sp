@@ -21,7 +21,7 @@ CXX       ?= g++
 CFLAGS    ?= -Wall -Wno-parentheses -std=c++11
 LFLAGS    ?= -Wall -lpthread 
 
-COPTIMIZE ?= -O3
+COPTIMIZE ?= -O0
 
 CFLAGS    += -I$(MROOT) -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS
 LFLAGS    += -lz

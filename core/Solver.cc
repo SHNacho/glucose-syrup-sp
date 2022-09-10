@@ -53,7 +53,8 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "mtl/Sort.h"
 #include "core/Solver.h"
 #include "core/Constants.h"
-#include"simp/SimpSolver.h"
+#include "simp/SimpSolver.h"
+#include "sp/SPSolver.h"
 
 using namespace Glucose;
 
@@ -117,6 +118,7 @@ static BoolOption opt_fixed_randomize_phase_on_restarts(_cat, "fix-phas-rest", "
 static BoolOption opt_adapt(_cat, "adapt", "Adapt dynamically stategies after 100000 conflicts", true);
 
 static BoolOption opt_forceunsat(_cat,"forceunsat","Force the phase for UNSAT",true);
+static DoubleOption opt_alpha(_cat, "alpha", "The fraction of variables to fix on each SP itertion", 0.04, DoubleRange(0.001, false, 0.05, false));
 //=================================================================================================
 // Constructor/Destructor:
 
@@ -167,6 +169,8 @@ verbosity(0)
 , newDescent(0)
 , randomDescentAssignments(0)
 , forceUnsatOnNewDescent(opt_forceunsat)
+, alpha(opt_alpha)
+, assignPerStep(0)
 
 , ok(true)
 , cla_inc(1)
@@ -688,9 +692,37 @@ Lit Solver::pickBranchLit() {
     // Activity based decision:
     while(next == var_Undef || value(next) != l_Undef || !decision[next])
         if(order_heap.empty()) {
+            // Si la pila está vacía se termina
             next = var_Undef;
             break;
         } else {
+            // Si no:
+            // TODO: 
+            // Calcular el número de variables a asignar por SP en el siguiente paso
+            // Si no se han asignado todas, asignar la siguiente
+            // Si se han asignado todas -> Ejecutar SP y devolver las variables
+            // ordenadas junto con si asignación
+            // De alguna manera modificar el vector order_heap para que tenga en cuenta
+            // el orden de las variables
+            if(assignPerStep == 0){
+                // Ejecutar SP:
+                // ->
+                for(int i = 0; i < 10; ++i){
+                    printClause(clauses[i]);
+                    printf("\n");
+                }
+                sp::FactorGraph fg();
+                sp::SPSolver spSolver();
+
+                // Modificar order_heap en función de los valores obtenidos
+                // ->
+
+                // Si converge: calcular num variables a asignar
+                assignPerStep = alpha * nVars();
+            } else {
+                assignPerStep--;
+            }
+
             next = order_heap.removeMin();
         }
 
