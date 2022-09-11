@@ -18,6 +18,7 @@ namespace sp{
 		
 		// Methods:
 		Clause();
+		Clause(const Clause &copy);
 	};
 	
 	
@@ -41,6 +42,7 @@ namespace sp{
 		
 		// Methods:
 		Variable(int id);
+		Variable(const Variable &copy);
 	};
 	
 	/**
@@ -59,6 +61,7 @@ namespace sp{
 		
 		// Methods:
 		Literal(Variable* var, Clause* cl, int type);
+		Literal(const Literal &copy);
 		void Disable();
 	};
 	
@@ -72,10 +75,21 @@ namespace sp{
 	
 		// Methods:
 		FactorGraph(string file);
+		FactorGraph(vector<vector<int>> &clauses);
+		FactorGraph(const FactorGraph &copy);
+		~FactorGraph();
 		vector<string> splitString(string str);
 		bool simplify(Variable* var);
 		bool fix(Variable* var, int val);
 		bool fixUnitClause(Clause* c);
+	};
+
+	struct comp
+	{
+	    bool operator()(Variable* lhs, Variable* rhs) const
+	    {
+			return lhs->id < rhs->id;
+	    }
 	};
 }
 

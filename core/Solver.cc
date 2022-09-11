@@ -707,11 +707,24 @@ Lit Solver::pickBranchLit() {
             if(assignPerStep == 0){
                 // Ejecutar SP:
                 // ->
-                for(int i = 0; i < 10; ++i){
-                    printClause(clauses[i]);
-                    printf("\n");
+                // Se obtiene un vector de cláusulas que se le pueda pasar a 
+                // fg
+                vector<vector<int>> clauses_sp;
+                for(int i = 0; i < nClauses(); ++i){
+                    Clause &c = ca[clauses[i]];
+                    vector<int> clause;
+                    for(int j = 0; j < c.size(); ++j){
+                        Lit l = c[j];
+                        int var_id = var(l)+1;
+                        if(value(l) == l_Undef){
+                            var_id = sign(l) ? (var_id * -1) : var_id;
+                            clause.push_back(var_id);
+                        }
+                    }
+                    if(clause.size() > 0)
+                        clauses_sp.push_back(clause);
                 }
-                sp::FactorGraph fg();
+                sp::FactorGraph fg(clauses_sp);
                 sp::SPSolver spSolver();
 
                 // Modificar order_heap en función de los valores obtenidos
