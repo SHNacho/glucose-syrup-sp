@@ -10,7 +10,7 @@
 using namespace std;
 
 namespace sp{
-	//// VARIABLE ////
+
 	Variable::Variable(int id){
 		this->value = 0;
 		this->id = id;
@@ -18,40 +18,21 @@ namespace sp{
 		this->m = 1;
 		this->mzero = 0;
 		this->pzero = 0;
-		this->ws_break = 0;
-		this->ws = false;
 		wp = wm = wz = 0;
 	}
 
 	Variable::Variable(const Variable &copy){
-			this->value = copy.value;
-			this->id = copy.id;
-			this->p = copy.p;
-			this->m = copy.m;
-			this->mzero = copy.mzero;
-			this->pzero = copy.pzero;
-			this->wp = copy.wp;
-			this->wm = copy.wm;
-			this->wz = copy.wz;
-			this->literals = copy.literals;
-			this->ws_break = copy.ws_break;
-			this->ws = copy.ws;
+		this->value = copy.value;
+		this->id = copy.id;
+		this->p = copy.p;
+		this->m = copy.m;
+		this->mzero = copy.mzero;
+		this->pzero = copy.pzero;
+		this->wp = copy.wp;
+		this->wm = copy.wm;
+		this->wz = copy.wz;
+		this->literals = copy.literals;
 	}
-
-	vector<Clause*> Variable::TLC(){
-		vector<Clause*> vTLC;
-		for(Literal* l : literals){
-			Clause* c = l->cl;
-			if(!c->satisfied){ // Quitamos las que ya se hayan satisfecho por SP
-				if(this->value == l->type){
-					vTLC.push_back(c);
-				}
-			}
-		}
-		return vTLC;
-	}
-
-	//// LITERAL ////
 
 	Literal::Literal(Variable* var, Clause* cl, int type){
 		this->cl = cl;
@@ -69,40 +50,17 @@ namespace sp{
 		this->enabled = copy.enabled;
 		this->survey = copy.survey;
 	}
-	//// CLAUSE ////
 
 	Clause::Clause(){
 		this->satisfied = false;
 		this->unassigned_literals = 0;
-		this->ws_unvisited = true;
 	}
 
 	Clause::Clause(const Clause &copy){
 		this->literals = copy.literals;
 		this->unassigned_literals = copy.unassigned_literals;
 		this->satisfied = copy.satisfied;
-		this->ws_unvisited = true;
 	}
-
-	bool Clause::isSAT(){
-		for(Literal* l : literals){
-			if(l->type == l->var->value)
-				return true;
-		}
-
-		return false;
-	}
-
-	int Clause::NT(){
-		int count = 0;
-		for(Literal* l : literals){
-			Variable* v = l->var;
-			if(l->type == v->value) count++;		
-		}
-		return count;
-	}
-
-	//// FACTOR GRAPH //
 
 	FactorGraph::FactorGraph(string file){
 		this->unassigned_vars = 0;
@@ -199,14 +157,6 @@ namespace sp{
 		return tokens;
 	}
 
-	bool FactorGraph::isSAT(){
-		for(Clause* c : clauses){
-			if(!c->isSAT())
-				return false;
-		}
-		return true;
-	}
-
 	bool FactorGraph::fix(Variable* var, int val){
 		if(var->value) // si es 1 o -1, ya está asignado
 			return true;
@@ -264,4 +214,5 @@ namespace sp{
 		}
 		return false;
 	}
+
 }

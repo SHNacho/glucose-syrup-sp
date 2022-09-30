@@ -15,22 +15,10 @@ namespace sp{
 		vector<Literal*> literals;
 		int unassigned_literals;
 		bool satisfied;
-	
-		// WalkSAT variables
-		bool ws_unvisited;
 		
 		// Methods:
 		Clause();
 		Clause(const Clause &copy);
-		bool isSAT();
-	
-		//WalkSAT methods
-		/**
-		 * @brief Number of true literals in the clause
-		 * 
-		 * @return int Number of true literals in the clause
-		 */
-		int NT();
 	};
 	
 	
@@ -51,22 +39,10 @@ namespace sp{
 		double wm; //minus
 		
 		vector<Literal*> literals; //
-	
-		// WalkSAT variables:
-		bool ws; // Indica si la variable se usa en WS
-		int ws_break;
 		
 		// Methods:
 		Variable(int id);
 		Variable(const Variable &copy);
-	
-		// WalkSAT Methods:
-		/**
-		 * @brief Obtiene las cláusualas que contienen un literal de la variable positivo
-		 * 
-		 * @return vector<Clause*> 
-		 */
-		vector<Clause*> TLC();
 	};
 	
 	/**
@@ -106,10 +82,8 @@ namespace sp{
 		bool simplify(Variable* var);
 		bool fix(Variable* var, int val);
 		bool fixUnitClause(Clause* c);
-		bool isSAT();
-	
 	};
-	
+
 	struct comp
 	{
 	    bool operator()(Variable* lhs, Variable* rhs) const
