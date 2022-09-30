@@ -14,6 +14,7 @@ namespace sp{
 	}
 
 	double SPSolver::iterate(){
+	// Update surveys of clauses in a random permutation
 		double eps=0.0, maxeps=0.0;
 
 		vector<Clause*> clauses = this->fg->clauses;
@@ -256,7 +257,6 @@ namespace sp{
 				//WALKSAT
 				cout << "Iteraciones de SP: " << SPIter << endl;
 				cout << "WALKSAT" << endl;
-				WalkSat();
 				return true;
 			}
 
@@ -283,116 +283,22 @@ namespace sp{
 			return false;
 	}
 
-	bool SPSolver::WalkSat(){
-		// Variables y cláusulas que se usarán en WalkSAT
-		vector<Variable*> ws_variables;
-		vector<Clause*> ws_clauses;
-
-		for(Variable* var : fg->variables) if(var->value == 0){
-			ws_variables.push_back(var); 
-			var->ws = true;
-		}
-		for(Clause* cl : fg->clauses) if(!cl->satisfied)
-			ws_clauses.push_back(cl);
-
-		for(int i = 0; i < WS_MAX_TRIES; ++i){
-			// Se genera una asignación aleatoria de las variables
-			int values[2] = {1, -1}; // Posibles valores
-			std::uniform_int_distribution<int> int_distribution(0, 1);
-			for(Variable* var : ws_variables){
-				int idx_value = int_distribution(rng);
-				var->value = values[idx_value];
-			}
-
-			// Durante maxStep pasos:
-			int steps = 0;
-			std::uniform_int_distribution<int> clauses_int_distribution(0, ws_clauses.size() - 1);
-
-			while(steps < WS_MAX_STEPS){
-				// SI la asignación satisface la fórmula devolver SAT
-				if(fg->isSAT()) return true;
-
-				// Escoger una cláusula aleatoria
-				int rnd_clause = clauses_int_distribution(rng);
-				Clause* c = ws_clauses[rnd_clause];
-
-				// Escoger una variable de la cláusula
-				Variable* var = pickVar(c);
-
-				// Cambiar el valor de la variable
-				var->value = var->value == 1 ? -1 : 1;
-
-				steps++;
-			}
-		}
-
-		return false;
-	}
-
-	Variable* SPSolver::pickVar(Clause* cl){
-
-		vector<Variable*> vars;
-		for(Literal* l : cl->literals) if(l->var->ws)
-			vars.push_back(l->var);
-
-		// Se ordenan las variables de manera aleatoria
-		shuffle(vars.begin(), vars.end(), this->rng);
-
-		// Separating-non-caching - Sixue Liu 2015
-		for(Variable* v : vars){
-			vector<Clause*> tlc = v->TLC();
-			for(Clause* c : tlc){
-				c->ws_unvisited = true;
-			}
-			int zero = true;
-			for(Clause* c : tlc){
-				c->ws_unvisited = false;
-				if(c->NT() == 1){
-					zero = false;
-					break;
-				}
-			}
-			if(zero) return v;
-		}
-
-		for(Variable* v : vars){
-			v->ws_break = 1;
-			vector<Clause*> tlc = v->TLC();
-			for(Clause* c : tlc) if(c->ws_unvisited){
-				if(c->NT() == 1)
-					v->ws_break += 1;
-			}
-		}
-
-		std::uniform_real_distribution<float> float_distribution(0.0, 1.0);
-		std::uniform_int_distribution<int> int_distribution(0, vars.size() - 1);
-		float p = float_distribution(rng);
-		if(p < WS_NOISE){
-			int idx = int_distribution(rng);
-			Variable* ret_var = vars[idx];
-			return ret_var;
-		}
-		else{
-			Variable* min_break_var = vars[0];
-			int min_break = 1000;
-			for(Variable* v : vars){
-				int var_break = v->ws_break;
-				if(var_break < min_break){
-					min_break = var_break;
-					min_break_var = v;
-				}
-			}
-			return min_break_var;
-		}
-
-	}
-
-
 
 	bool biasComparator(Variable* v1, Variable* v2){
 		double b1 = fabs(v1->wm - v1->wp);
 		double b2 = fabs(v2->wm - v2->wp);
 		return (b1 > b2);
 	}
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
