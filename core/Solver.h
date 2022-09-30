@@ -58,6 +58,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "core/Constants.h"
 #include "mtl/Clone.h"
 #include "core/SolverStats.h"
+#include "sp/SPSolver.h"
 
 
 namespace Glucose {

@@ -135,12 +135,18 @@ namespace sp{
 	}
 
 	FactorGraph::~FactorGraph(){
-		for(Literal* l : literals) if(l != nullptr)
+		for(Literal* l : literals) if(l != nullptr){
 			delete l;
-		for(Variable* v : variables) if(v != nullptr)
+			l = nullptr;
+		}
+		for(Variable* v : variables) if(v != nullptr){
 			delete v;
-		for(Clause* c : clauses) if(c != nullptr)
+			v = nullptr;
+		}
+		for(Clause* c : clauses) if(c != nullptr){
 			delete c;
+			c = nullptr;
+		}
 	}
 
 	vector<string> FactorGraph::splitString(string s) {
