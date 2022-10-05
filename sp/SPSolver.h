@@ -4,6 +4,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
+#include <queue>
 
 #include "FactorGraph.h"
 
@@ -33,7 +34,11 @@ namespace sp{
 		int SPIter;		// Número de iteraciones de SP
 	
 		// Methods:
+
+		SPSolver();
+
 		SPSolver(FactorGraph* fg, float alpha);
+
 		/**
 		 * @brief Itera sobre todas las cláusulas, actualizando
 		 * las surveys de cada una de sus variables
@@ -41,6 +46,7 @@ namespace sp{
 		 * @return Valor de la survey más alta
 		*/
 		double iterate();
+
 		/**
 		 * @brief Actualiza todas las surveys y productos de (1 - survey)
 		 * de una cláusula
@@ -49,6 +55,7 @@ namespace sp{
 		 * nueva calculada. max(|new_survey - old_survey|)
 		*/
 		double updateSurvey(Clause* c); //update_eta 
+		
 		/**
 		 * @brief Actualiza de forma iteratica las surveys hasta que estas convergen a EPSILON
 		 * o hasta que se alcanza el número máximo de iteraciones
@@ -57,20 +64,30 @@ namespace sp{
 		 * @return false Si no convergen
 		 */
 		bool surveyPropagation(); //Converge
+
 		/**
 		 * @brief Calcula los productos (1 - survey) de todas las variables
 		 */
 		void computeSubProducts(); //compute_pi
+
 		/**
 		 * @brief Calcula los sesgos de una variable
 		 * 
 		 * @param var Variable sobre la que calcular los sesgos
 		 */
 		void computeBias(Variable* var); //compute_fields
+
 		/**
 		 * @brief Comprueba y satisface las cláusulas unitarias
 		 */
 		void unitPropagation();
+
+		/**
+		 * @brief Inicializa el valor de la surveys de los literales de 
+		 * manera aleatoria
+		 */
+		void initRandomSurveys();
+
 		/**
 		 * @brief 
 		 * 
@@ -78,6 +95,9 @@ namespace sp{
 		 * @return false 
 		 */
 		bool surveyInspiredDecimation();
+
+		bool varsToAssign(queue<int> & vars);
+
 		/**
 		 * @brief Asigna un conjunto de variables
 		 * 
@@ -86,6 +106,7 @@ namespace sp{
 		 * @return false Si ha habido alguna contradicción
 		 */
 		bool fixChunk(int quant, vector<Variable*> vars);
+
 		/**
 		 * @brief Ejecuta el algoritmo WalkSat sobre la fórmula
 		 * 

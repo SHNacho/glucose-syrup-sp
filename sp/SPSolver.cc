@@ -213,22 +213,24 @@ namespace sp{
 		}
 	}
 
-
-	bool SPSolver::surveyInspiredDecimation(){
-		int SIDIterations = 0;
-		SPIter = 0;
-		// Asignación aleatoria de las surveys
+	void SPSolver::initRandomSurveys(){
 		std::uniform_real_distribution<float> distribution(0.0, 1.0);
-
-		// Se realiza unitPropagation por si hay cláusulas unitarias
-		unitPropagation();
-
-		// Inicialización aleatoria de las surveys
 		for(Literal* l : fg->literals){
 			if(l->enabled){
 				l->survey = distribution(rng);
 			}
 		}
+	}
+
+	bool SPSolver::surveyInspiredDecimation(){
+		int SIDIterations = 0;
+		SPIter = 0;
+
+		// Se realiza unitPropagation por si hay cláusulas unitarias
+		unitPropagation();
+
+		// Se inicializan las surveys
+		initRandomSurveys();
 
 		// Se cualculan cuantas variables se asignarán en cada paso
 		int fixPerStep = fg->unassigned_vars * alpha > 1 ? fg->unassigned_vars * alpha : 1;
@@ -256,8 +258,7 @@ namespace sp{
 				//WALKSAT
 				cout << "Iteraciones de SP: " << SPIter << endl;
 				cout << "WALKSAT" << endl;
-				WalkSat();
-				return true;
+				return WalkSat();
 			}
 
 			// Asignación de las variables ordenadas por bias
@@ -281,6 +282,45 @@ namespace sp{
 			return true;
 		else
 			return false;
+	}
+
+	bool SPSolver::varsToAssign(queue<int> & vars){
+		// Se cualculan cuantas variables se asignarán en cada paso
+		int fixPerStep = fg->unassigned_vars * alpha > 1 ? fg->unassigned_vars * alpha : 1;
+		if (surveyPropagation() && fg->unassigned_vars){
+			double summag = 0;		// Suma de los sesgos
+			double maxmag; 			// Máximo sesgo obtenido
+
+			// Se calcula el sesgo de cada la variable
+			for(Variable* v : fg->variables) if(v->value == 0){
+				computeBias(v);
+				maxmag=v->wp > v->wm ? v->wp : v->wm;
+				summag += maxmag;
+			}
+
+			// Se ordenan las variables en función del sesgo
+			vector<Variable*> sortedVars = fg->variables;
+			sort(sortedVars.begin(), sortedVars.end(), biasComparator);
+
+			// Si se llega a un estado paramagnético, se resuelve por walksat
+			if(summag/fg->unassigned_vars < PARAMAGNET){
+				//WALKSAT
+				cout << "Iteraciones de SP: " << SPIter << endl;
+				cout << "WALKSAT" << endl;
+				return WalkSat();
+			}
+
+			// Asignación de las variables ordenadas por bias
+			int aux = fixPerStep;
+
+			for(int i = 0; i < fixPerStep; ++i){
+				vars.push(sortedVars[i]->id);
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
 	bool SPSolver::WalkSat(){

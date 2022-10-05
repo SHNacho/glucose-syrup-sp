@@ -218,6 +218,11 @@ namespace sp{
 		return simplify(var);
 	}
 
+	bool FactorGraph::fix(int id_var, int val){
+		Variable* var = variables[id_var];
+		return this->fix(var, val);
+	}
+
 	/**
 	* Simpify after fixing var
 	*/

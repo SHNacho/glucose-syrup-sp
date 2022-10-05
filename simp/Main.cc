@@ -58,6 +58,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "utils/Options.h"
 #include "core/Dimacs.h"
 #include "simp/SimpSolver.h"
+#include "sp/SPSolver.h"
 
 using namespace Glucose;
 
@@ -202,8 +203,12 @@ int main(int argc, char** argv)
             printf("c Reading from standard input... Use '--help' for help.\n");
 
         gzFile in = (argc == 1) ? gzdopen(0, "rb") : gzopen(argv[1], "rb");
+        
         if (in == NULL)
             printf("ERROR! Could not open file: %s\n", argc == 1 ? "<stdin>" : argv[1]), exit(1);
+
+        sp::FactorGraph fg(argv[1]);
+        S.initSPInstance(&fg);
 
       if (S.verbosity > 0){
             printf("c ========================================[ Problem Statistics ]===========================================\n");

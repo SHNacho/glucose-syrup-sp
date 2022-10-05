@@ -689,56 +689,77 @@ Lit Solver::pickBranchLit() {
             stats[rnd_decisions]++;
     }
 
-    // Activity based decision:
-    while(next == var_Undef || value(next) != l_Undef || !decision[next])
-        if(order_heap.empty()) {
-            // Si la pila está vacía se termina
-            next = var_Undef;
-            break;
-        } else {
-            // Si no:
-            // TODO: 
-            // Calcular el número de variables a asignar por SP en el siguiente paso
-            // Si no se han asignado todas, asignar la siguiente
-            // Si se han asignado todas -> Ejecutar SP y devolver las variables
-            // ordenadas junto con si asignación
-            // De alguna manera modificar el vector order_heap para que tenga en cuenta
-            // el orden de las variables
-            if(assignPerStep == 0){
-                // Ejecutar SP:
-                // ->
-                // Se obtiene un vector de cláusulas que se le pueda pasar a 
-                // fg
-                vector<vector<int>> clauses_sp;
-                for(int i = 0; i < nClauses(); ++i){
-                    Clause &c = ca[clauses[i]];
-                    vector<int> clause;
-                    for(int j = 0; j < c.size(); ++j){
-                        Lit l = c[j];
-                        int var_id = var(l)+1;
-                        if(value(l) == l_Undef){
-                            var_id = sign(l) ? (var_id * -1) : var_id;
-                            clause.push_back(var_id);
-                        }
-                    }
-                    if(clause.size() > 0)
-                        clauses_sp.push_back(clause);
-                }
-                sp::FactorGraph fg(clauses_sp);
-                sp::SPSolver spSolver();
+    // Se simplifica el FactorGraph
+    for(int v = 0; v < nVars(); ++v){
+        int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
+        if(spVal != 0)
+            fg->fix(v+1, spVal);
+    }
+    // ¡OJO! La simplificación puede asignar variables por UP
 
-                // Modificar order_heap en función de los valores obtenidos
-                // ->
+    //TODO:
+    // · Devolver las variables a asignar WalkSAT
+    bool converge = true;
 
-                // Si converge: calcular num variables a asignar
-                assignPerStep = alpha * nVars();
-            } else {
-                assignPerStep--;
-            }
+    if(spVars.size() == 0)
+        converge = spSolver->varsToAssign(spVars);
 
-            next = order_heap.removeMin();
+    if(converge){
+        // · Si hay variables que asignar -> Recalcular bias y valor a asignar 
+        if(!spVars.empty()){
+            int var = spVars.front();
+            spVars.pop();
         }
+    }
+    else{
+        // Activity based decision:
+        while(next == var_Undef || value(next) != l_Undef || !decision[next])
+            if(order_heap.empty()) {
+                // Si la pila está vacía se termina
+                next = var_Undef;
+                break;
+            } else {
+                // Si no:
+                // TODO: 
+                // Calcular el número de variables a asignar por SP en el siguiente paso
+                // Si no se han asignado todas, asignar la siguiente
+                // Si se han asignado todas -> Ejecutar SP y devolver las variables
+                // ordenadas junto con si asignación
+                if(assignPerStep == 0){
+                    // Ejecutar SP:
+                    // ->
+                    // Se obtiene un vector de cláusulas que se le pueda pasar a 
+                    // fg
+                    vector<vector<int>> clauses_sp;
+                    for(int i = 0; i < nClauses(); ++i){
+                        Clause &c = ca[clauses[i]];
+                        vector<int> clause;
+                        for(int j = 0; j < c.size(); ++j){
+                            Lit l = c[j];
+                            int var_id = var(l)+1;
+                            if(value(l) == l_Undef){
+                                var_id = sign(l) ? (var_id * -1) : var_id;
+                                clause.push_back(var_id);
+                            }
+                        }
+                        if(clause.size() > 0)
+                            clauses_sp.push_back(clause);
+                    }
+                    sp::FactorGraph fg(clauses_sp);
+                    sp::SPSolver spSolver();
 
+                    // Modificar order_heap en función de los valores obtenidos
+                    // ->
+
+                    // Si converge: calcular num variables a asignar
+                    assignPerStep = alpha * nVars();
+                } else {
+                    assignPerStep--;
+                }
+
+                next = order_heap.removeMin();
+            }
+    }
     if(randomize_on_restarts && !fixed_randomize_on_restarts && newDescent && (decisionLevel() % 2 == 0)) {
         return mkLit(next, (randomDescentAssignments >> (decisionLevel() % 32)) & 1);
     }

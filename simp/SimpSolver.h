@@ -103,6 +103,9 @@ class SimpSolver : public Solver {
     bool    solve       (Lit p, Lit q, Lit r, bool do_simp = true, bool turn_off_simp = false);
     bool    eliminate   (bool turn_off_elim = false);  // Perform variable elimination based simplification. 
 
+    // Survey Propagation
+    inline bool initSPInstance(sp::FactorGraph *fg){this->fg = fg; this->spSolver = new sp::SPSolver(fg, alpha);}
+
     // Memory managment:
     //
     virtual void garbageCollect();

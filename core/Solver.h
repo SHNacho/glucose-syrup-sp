@@ -58,6 +58,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "core/Constants.h"
 #include "mtl/Clone.h"
 #include "core/SolverStats.h"
+#include "sp/SPSolver.h"
 
 
 namespace Glucose {
@@ -216,9 +217,14 @@ public:
     int          lbSizeMinimizingClause;
     unsigned int lbLBDMinimizingClause;
 
+    // Survey Propagation variables
+    double    alpha;                // Alpha parameter for SP heuristic
+    sp::FactorGraph* fg;
+    sp::SPSolver* spSolver;
+    queue<int> spVars;             // To store variables returned by SP
+
     // Constant for heuristic
     double    var_decay;
-    double    alpha;              // Alpha parameter for SP heuristic
     double    max_var_decay;
     double    clause_decay;
     double    random_var_freq;
