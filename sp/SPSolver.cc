@@ -11,6 +11,7 @@ namespace sp{
 		rng = default_random_engine {};
 		this->alpha = alpha;
 		this-> SPIter = 0;
+		this->initRandomSurveys();
 	}
 
 	double SPSolver::iterate(){
@@ -204,6 +205,15 @@ namespace sp{
 		var->wz /= norm;
 	}
 
+	void SPSolver::computeBias(int id_var){
+		computeBias(fg->variables[id_var - 1]);
+	}
+
+	int SPSolver::valueToAssign(int id_var){
+		Variable* var = fg->variables[id_var-1];
+		int val = var->wp > var->wm ? -1 : 1;
+	}
+
 
 	void SPSolver::unitPropagation(){
 		for (Clause* c : fg->clauses){
@@ -233,7 +243,7 @@ namespace sp{
 		initRandomSurveys();
 
 		// Se cualculan cuantas variables se asignarán en cada paso
-		int fixPerStep = fg->unassigned_vars * alpha > 1 ? fg->unassigned_vars * alpha : 1;
+		int fixPerStep = fg->variables.size() * alpha > 1 ? fg->unassigned_vars * alpha : 1;
 
 		// Mientras que survey propagation llegue a un estado de convergencia
 		while(surveyPropagation() && fg->unassigned_vars){
@@ -286,7 +296,8 @@ namespace sp{
 
 	bool SPSolver::varsToAssign(queue<int> & vars){
 		// Se cualculan cuantas variables se asignarán en cada paso
-		int fixPerStep = fg->unassigned_vars * alpha > 1 ? fg->unassigned_vars * alpha : 1;
+		// int fixPerStep = fg->unassigned_vars * alpha > 1 ? fg->unassigned_vars * alpha : 1;
+		int fixPerStep = fg->variables.size() * alpha > 1 ? fg->unassigned_vars * alpha : 1;
 		if (surveyPropagation() && fg->unassigned_vars){
 			double summag = 0;		// Suma de los sesgos
 			double maxmag; 			// Máximo sesgo obtenido
@@ -427,7 +438,19 @@ namespace sp{
 
 	}
 
-
+	void SPSolver::resetGraph(){
+		for(Clause* c : fg->clauses){
+			c->satisfied = false;
+			c->unassigned_literals = c->literals.size();
+		}
+		for(Literal* l : fg->literals){
+			l->enabled = true;
+		}
+		for(Variable* v : fg->variables){
+			v->value = 0;
+		}
+		fg->unassigned_vars = fg->variables.size();
+	}
 
 	bool biasComparator(Variable* v1, Variable* v2){
 		double b1 = fabs(v1->wm - v1->wp);

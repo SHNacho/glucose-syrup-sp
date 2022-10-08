@@ -76,6 +76,9 @@ namespace sp{
 		 * @param var Variable sobre la que calcular los sesgos
 		 */
 		void computeBias(Variable* var); //compute_fields
+		void computeBias(int id_var);
+
+		int valueToAssign(int id_var);
 
 		/**
 		 * @brief Comprueba y satisface las cláusulas unitarias
@@ -121,6 +124,12 @@ namespace sp{
 		 * @return Variable* Puntero a la variable escogida
 		 */
 		Variable* pickVar(Clause* c);
+
+		/**
+		 * @brief Reinicia el grafo, eliminando los valores ya asignados
+		 * y habilitando todos los literales y cláusulas
+		 */
+		void resetGraph();
 	};
 	
 	bool biasComparator(Variable* v1, Variable* v2);
