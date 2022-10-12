@@ -294,7 +294,8 @@ namespace sp{
 			return false;
 	}
 
-	bool SPSolver::varsToAssign(queue<int> & vars){
+	bool SPSolver::varsToAssign(){
+		while(!fg->fixedVars.empty()) fg->fixedVars.pop();
 		// Se cualculan cuantas variables se asignarán en cada paso
 		// int fixPerStep = fg->unassigned_vars * alpha > 1 ? fg->unassigned_vars * alpha : 1;
 		int fixPerStep = fg->variables.size() * alpha > 1 ? fg->unassigned_vars * alpha : 1;
@@ -324,8 +325,18 @@ namespace sp{
 			// Asignación de las variables ordenadas por bias
 			int aux = fixPerStep;
 
-			for(int i = 0; i < fixPerStep; ++i){
-				vars.push(sortedVars[i]->id);
+			while(fg->unassigned_vars && aux--){
+				vector<Variable*>::iterator it = sortedVars.begin();
+				while((*it)->value && it != sortedVars.end())
+					it++;
+				// Una asignación modifica el sesgo de las demás 
+				// variables por lo que se recalcula
+				computeBias(*it);
+				int val = (*it)->wp > (*it)->wm ? -1 : 1;
+				if (!fg->fix(*it, val))
+					return false;
+
+				it++;
 			}
 
 			return true;
@@ -449,6 +460,7 @@ namespace sp{
 		for(Variable* v : fg->variables){
 			v->value = 0;
 		}
+		while(!fg->fixedVars.empty()) fg->fixedVars.pop();
 		fg->unassigned_vars = fg->variables.size();
 	}
 

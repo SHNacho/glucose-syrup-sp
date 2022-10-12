@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <queue>
 
 
 using namespace std;
@@ -96,6 +97,9 @@ namespace sp{
 		vector<Clause*> clauses;
 	
 		int unassigned_vars;
+
+		// For Glucose
+		queue< pair<int, int> > fixedVars; // Variables asignadas en una iteracion SID
 	
 		// Methods:
 		FactorGraph(string file);

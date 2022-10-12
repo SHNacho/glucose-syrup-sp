@@ -32,6 +32,7 @@ namespace sp{
 	
 		float alpha;	// Fracción de variables a asignar
 		int SPIter;		// Número de iteraciones de SP
+
 	
 		// Methods:
 
@@ -92,14 +93,14 @@ namespace sp{
 		void initRandomSurveys();
 
 		/**
-		 * @brief 
+		 * @brief Proceso de decimación de SP
 		 * 
-		 * @return true 
-		 * @return false 
+		 * @return true Si llega a una solución
+		 * @return false En caso contrario
 		 */
 		bool surveyInspiredDecimation();
 
-		bool varsToAssign(queue<int> & vars);
+		bool varsToAssign();
 
 		/**
 		 * @brief Asigna un conjunto de variables

@@ -221,7 +221,7 @@ public:
     double    alpha;                // Alpha parameter for SP heuristic
     sp::FactorGraph* fg;
     sp::SPSolver* spSolver;
-    queue<int> spVars;             // To store variables returned by SP
+    int stepsUntilSP;
 
     // Constant for heuristic
     double    var_decay;

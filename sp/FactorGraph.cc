@@ -219,6 +219,8 @@ namespace sp{
 
 		var->value = val;
 		unassigned_vars--;
+		pair<int, int> var_value(var->id, val);
+		fixedVars.push(var_value);
 
 
 		return simplify(var);

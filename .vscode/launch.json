@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/simp/glucose",
             "args": [
                 "data/cnf_1.txt",
-                "simp/result.txt"
+                "simp/result.txt",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

@@ -672,7 +672,18 @@ void Solver::cancelUntil(int level) {
         trail.shrink(trail.size() - trail_lim[level]);
         trail_lim.shrink(trail_lim.size() - level);
         spSolver->resetGraph(); // SurveyPropagation
-        while(!spVars.empty()) spVars.pop();
+        int uv = nVars();
+        for(int v = 0; v < nVars(); ++v){
+           int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
+           if(spVal != 0){
+                if(!fg->fix(v, spVal)){
+                    cancelUntil(level - 1);
+                }
+           }
+        }
+        printf("%d\n",uv);
+        printf("fixedVars: %d\n", fg->fixedVars.size());
+		while(!fg->fixedVars.empty()) fg->fixedVars.pop();
     }
 }
 
@@ -683,6 +694,10 @@ void Solver::cancelUntil(int level) {
 Lit Solver::pickBranchLit() {
     Var next = var_Undef;
 
+    if(stepsUntilSP != 0){
+        stepsUntilSP--;
+    }
+
     // Random decision:
     if(((randomizeFirstDescent && conflicts == 0) || drand(random_seed) < random_var_freq) && !order_heap.empty()) {
         next = order_heap[irand(random_seed, order_heap.size())];
@@ -690,38 +705,30 @@ Lit Solver::pickBranchLit() {
             stats[rnd_decisions]++;
     }
 
-    // Se simplifica el FactorGraph
-    int assignedVars = 0;
-    for(int v = 0; v < nVars(); ++v){
-       int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
-       if(spVal != 0){
-            assignedVars++;
-            fg->fix(v, spVal);
-       }
-    }
-    if(assignedVars != fg->variables.size() - fg->unassigned_vars){
-        printf("Variables asignadas en Glucose: %d\n", assignedVars);
-        printf("Variables asignadas en SP: %d\n", fg->variables.size() - fg->unassigned_vars);
-    }
-    // ¡OJO! La simplificación puede asignar variables por UP
+    // if(assignedVars != fg->variables.size() - fg->unassigned_vars){
+    //     printf("Variables asignadas en Glucose: %d\n", assignedVars);
+    //     printf("Variables asignadas en SP: %d\n", fg->variables.size() - fg->unassigned_vars);
+    // }
 
     //TODO:
     // · Devolver las variables a asignar WalkSAT
     bool converge = true;
 
-    if(spVars.size() == 0){
-        converge = spSolver->varsToAssign(spVars);
+    if(fg->fixedVars.empty() && stepsUntilSP == 0){
+        converge = spSolver->varsToAssign();
     }
 
     if(converge){
         // · Si hay variables que asignar -> Recalcular bias y valor a asignar 
-        if(!spVars.empty()){
-            int var = spVars.front()-1;
-            spVars.pop();
-            while (value(var) != l_Undef && spVars.size() != 0)
+        if(!fg->fixedVars.empty()){
+            int var = fg->fixedVars.front().first-1;
+            int val = fg->fixedVars.front().second;
+            fg->fixedVars.pop();
+            while (value(var) != l_Undef && !fg->fixedVars.empty())
             {
-                var = spVars.front();
-                spVars.pop();
+                var = fg->fixedVars.front().first-1;
+                val = fg->fixedVars.front().second;
+                fg->fixedVars.pop();
             }
             if(value(var) == l_Undef){
                 spSolver->computeBias(var);
@@ -729,6 +736,9 @@ Lit Solver::pickBranchLit() {
                 return mkLit(var, val);
             }
         }
+    } else {
+       stepsUntilSP = 1000; 
+       spSolver->initRandomSurveys();
     }
 
     // Activity based decision:
