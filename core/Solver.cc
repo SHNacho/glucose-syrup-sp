@@ -671,19 +671,19 @@ void Solver::cancelUntil(int level) {
         qhead = trail_lim[level];
         trail.shrink(trail.size() - trail_lim[level]);
         trail_lim.shrink(trail_lim.size() - level);
-        spSolver->resetGraph(); // SurveyPropagation
-        int uv = nVars();
-        for(int v = 0; v < nVars(); ++v){
-           int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
-           if(spVal != 0){
-                if(!fg->fix(v, spVal)){
-                    cancelUntil(level - 1);
-                }
-           }
-        }
-        printf("%d\n",uv);
-        printf("fixedVars: %d\n", fg->fixedVars.size());
-		while(!fg->fixedVars.empty()) fg->fixedVars.pop();
+        // spSolver->resetGraph(); // SurveyPropagation
+        // int uv = nVars();
+        // for(int v = 0; v < nVars(); ++v){
+        //    int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
+        //    if(spVal != 0){
+        //         if(!fg->fix(v, spVal)){
+        //             cancelUntil(level - 1);
+        //         }
+        //    }
+        // }
+        // printf("%d\n",uv);
+        // printf("fixedVars: %d\n", fg->fixedVars.size());
+		// while(!fg->fixedVars.empty()) fg->fixedVars.pop();
     }
 }
 
@@ -731,8 +731,6 @@ Lit Solver::pickBranchLit() {
                 fg->fixedVars.pop();
             }
             if(value(var) == l_Undef){
-                spSolver->computeBias(var);
-                bool val = spSolver->valueToAssign(var) == 1 ? true : false;
                 return mkLit(var, val);
             }
         }
