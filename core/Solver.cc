@@ -705,10 +705,8 @@ Lit Solver::pickBranchLit() {
             stats[rnd_decisions]++;
     }
 
-    // if(assignedVars != fg->variables.size() - fg->unassigned_vars){
-    //     printf("Variables asignadas en Glucose: %d\n", assignedVars);
-    //     printf("Variables asignadas en SP: %d\n", fg->variables.size() - fg->unassigned_vars);
-    // }
+    printf("Variables asignadas en Glucose: %d\n", nAssigns());
+    printf("Variables asignadas en SP: %d\n", fg->variables.size() - fg->unassigned_vars);
 
     //TODO:
     // · Devolver las variables a asignar WalkSAT
