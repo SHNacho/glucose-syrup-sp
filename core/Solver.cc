@@ -691,6 +691,7 @@ Lit Solver::pickBranchLit() {
     }
 
     // Se simplifica el FactorGraph
+    printf("Variables asignadas en SP: %d\n", fg->variables.size() - fg->unassigned_vars);
     int assignedVars = 0;
     for(int v = 0; v < nVars(); ++v){
        int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
@@ -699,10 +700,7 @@ Lit Solver::pickBranchLit() {
             fg->fix(v, spVal);
        }
     }
-    if(assignedVars != fg->variables.size() - fg->unassigned_vars){
-        printf("Variables asignadas en Glucose: %d\n", assignedVars);
-        printf("Variables asignadas en SP: %d\n", fg->variables.size() - fg->unassigned_vars);
-    }
+    printf("Variables asignadas en Glucose: %d\n", assignedVars);
     // ¡OJO! La simplificación puede asignar variables por UP
 
     //TODO:
