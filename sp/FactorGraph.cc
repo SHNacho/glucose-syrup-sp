@@ -69,6 +69,7 @@ namespace sp{
 		this->enabled = copy.enabled;
 		this->survey = copy.survey;
 	}
+
 	//// CLAUSE ////
 
 	Clause::Clause(){
@@ -145,6 +146,11 @@ namespace sp{
 			}
 			cl++;
 		}
+
+		nLearntClauses = 0;
+		nInitClauses = clauses.size();
+		nInitLiterals = literals.size();
+		this->unassigned_vars = variables.size();
 
 		fs.close();
 	}
@@ -276,5 +282,40 @@ namespace sp{
 				return fix(l->var, l->type);
 		}
 		return false;
+	}
+
+	void FactorGraph::addLearntClause(vector<int> &vars){
+
+		clauses.push_back(new Clause);
+
+		for(int j = 0; j < vars.size(); ++j){
+			int var = vars[j];
+			int type = var > 0 ? 1 : -1;
+			int id = abs(var);
+
+			literals.push_back(new Literal(variables[id-1], clauses.back(), type));
+			clauses.back()->unassigned_literals++;
+		}
+		nLearntClauses ++;
+	}
+
+	void FactorGraph::removeLearnt(){
+		if(nLearntClauses > 0){
+			clauses.resize(nInitClauses);
+
+			for(Literal* l : literals){
+				Variable* var = l->var;
+				vector<Literal*>::iterator it = var->literals.begin();
+				for(it; it != var->literals.end(); it++){
+					if(*it == l)
+						var->literals.erase(it);
+						break;
+				}
+			}
+
+			literals.resize(nInitLiterals);
+		}
+
+		nLearntClauses = 0;
 	}
 }

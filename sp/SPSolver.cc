@@ -450,18 +450,26 @@ namespace sp{
 	}
 
 	void SPSolver::resetGraph(){
+
+		fg->removeLearnt();
+		
 		for(Clause* c : fg->clauses){
 			c->satisfied = false;
 			c->unassigned_literals = c->literals.size();
 		}
+
 		for(Literal* l : fg->literals){
 			l->enabled = true;
 		}
+
 		for(Variable* v : fg->variables){
 			v->value = 0;
 		}
+
 		while(!fg->fixedVars.empty()) fg->fixedVars.pop();
 		fg->unassigned_vars = fg->variables.size();
+
+		initRandomSurveys();
 	}
 
 	bool biasComparator(Variable* v1, Variable* v2){

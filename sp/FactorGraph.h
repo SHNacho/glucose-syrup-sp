@@ -95,6 +95,11 @@ namespace sp{
 		vector<Literal*> literals;
 		vector<Variable*> variables;
 		vector<Clause*> clauses;
+
+		// Iterador que apunta a la primera cláusula aprendida
+		int nInitClauses;
+		int nInitLiterals;
+		int nLearntClauses;
 	
 		int unassigned_vars;
 
@@ -112,7 +117,8 @@ namespace sp{
 		bool fix(int id_var, int val);
 		bool fixUnitClause(Clause* c);
 		bool isSAT();
-	
+		void addLearntClause(vector<int> &variables);
+		void removeLearnt();
 	};
 	
 	struct comp

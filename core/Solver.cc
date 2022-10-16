@@ -671,19 +671,35 @@ void Solver::cancelUntil(int level) {
         qhead = trail_lim[level];
         trail.shrink(trail.size() - trail_lim[level]);
         trail_lim.shrink(trail_lim.size() - level);
-        // spSolver->resetGraph(); // SurveyPropagation
-        // int uv = nVars();
-        // for(int v = 0; v < nVars(); ++v){
-        //    int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
-        //    if(spVal != 0){
-        //         if(!fg->fix(v, spVal)){
-        //             cancelUntil(level - 1);
-        //         }
-        //    }
-        // }
-        // printf("%d\n",uv);
-        // printf("fixedVars: %d\n", fg->fixedVars.size());
-		// while(!fg->fixedVars.empty()) fg->fixedVars.pop();
+
+        /// SurveyPropagation ///
+        // Se eliminan todas las asignaciones del grafo
+        spSolver->resetGraph(); 
+
+        // TODO se añaden las cláusulas aprendidas
+        // hacer ...
+        for(int i = 0; i < nLearnts(); ++i){
+            vector<int> sp_clause;
+            Clause &c = ca[learnts[i]];
+            for(int j = 0; j < c.size(); ++j){
+                int var_id = var(c[j]) + 1;
+                int type = sign(c[j]) ? -1 : 1;
+                sp_clause.push_back(var_id * type);
+            }
+            fg->addLearntClause(sp_clause);
+            sp_clause.clear();
+        }
+
+        // Se simplifica el grafo con las asignaciones de glucose
+        for(int v = 0; v < nVars(); ++v){
+           int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
+           if(spVal != 0){
+                fg->fix(v, spVal);
+           }
+        }
+
+        // Se vacía el vector de cláusulas fijadas
+        while(!fg->fixedVars.empty()) fg->fixedVars.pop();
     }
 }
 
