@@ -222,6 +222,7 @@ public:
     sp::FactorGraph* fg;
     sp::SPSolver* spSolver;
     int stepsUntilSP;
+    bool callSP;
 
     // Constant for heuristic
     double    var_decay;

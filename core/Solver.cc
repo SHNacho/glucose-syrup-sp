@@ -690,16 +690,21 @@ void Solver::cancelUntil(int level) {
             sp_clause.clear();
         }
 
+        callSP = true;
+
         // Se simplifica el grafo con las asignaciones de glucose
         for(int v = 0; v < nVars(); ++v){
            int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
            if(spVal != 0){
-                fg->fix(v, spVal);
+                if(!fg->fix(v, spVal) && level >= 1){
+                    callSP = false;
+                }
            }
         }
 
         // Se vacía el vector de cláusulas fijadas
         while(!fg->fixedVars.empty()) fg->fixedVars.pop();
+        spSolver->initRandomSurveys();
     }
 }
 
@@ -709,10 +714,6 @@ void Solver::cancelUntil(int level) {
 
 Lit Solver::pickBranchLit() {
     Var next = var_Undef;
-
-    if(stepsUntilSP != 0){
-        stepsUntilSP--;
-    }
 
     // Random decision:
     if(((randomizeFirstDescent && conflicts == 0) || drand(random_seed) < random_var_freq) && !order_heap.empty()) {
@@ -728,7 +729,7 @@ Lit Solver::pickBranchLit() {
     // · Devolver las variables a asignar WalkSAT
     bool converge = true;
 
-    if(fg->fixedVars.empty() && stepsUntilSP == 0){
+    if(fg->fixedVars.empty() && callSP){
         converge = spSolver->varsToAssign();
     }
 
@@ -749,8 +750,8 @@ Lit Solver::pickBranchLit() {
             }
         }
     } else {
-       stepsUntilSP = 1000; 
-       spSolver->initRandomSurveys();
+       //spSolver->initRandomSurveys();
+       callSP = false;
     }
 
     // Activity based decision:

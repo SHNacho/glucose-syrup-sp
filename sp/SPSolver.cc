@@ -464,6 +464,9 @@ namespace sp{
 
 		for(Variable* v : fg->variables){
 			v->value = 0;
+			v->p = v->m = 1;
+			v->pzero = v->mzero = 0;
+			v->wp = v->wm = v->wz = 0;
 		}
 
 		while(!fg->fixedVars.empty()) fg->fixedVars.pop();

@@ -104,7 +104,7 @@ class SimpSolver : public Solver {
     bool    eliminate   (bool turn_off_elim = false);  // Perform variable elimination based simplification. 
 
     // Survey Propagation
-    inline bool initSPInstance(sp::FactorGraph *fg){this->fg = fg; this->spSolver = new sp::SPSolver(fg, alpha); stepsUntilSP=0;}
+    inline bool initSPInstance(sp::FactorGraph *fg){this->fg = fg; this->spSolver = new sp::SPSolver(fg, alpha); stepsUntilSP=0; callSP = true;}
 
     // Memory managment:
     //
