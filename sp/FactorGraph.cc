@@ -213,7 +213,7 @@ namespace sp{
 		return true;
 	}
 
-	bool FactorGraph::fix(Variable* var, int val){
+	bool FactorGraph::fix(Variable* var, int val, bool sp){
 		if(var->value) // si es 1 o -1, ya está asignado
 			return true;
 
@@ -222,13 +222,23 @@ namespace sp{
 		pair<int, int> var_value(var->id, val);
 		fixedVars.push(var_value);
 
+		fstream of;
+		of.open("assigns.txt", fstream::app);
+
+		if(sp)
+			of << var->id << " - " << val << " - SP" << endl;
+		else
+			of << var->id << " - " << val << " - UP" << endl;
+
+		of.close();
+
 
 		return simplify(var);
 	}
 
-	bool FactorGraph::fix(int id_var, int val){
+	bool FactorGraph::fix(int id_var, int val, bool sp){
 		Variable* var = variables[id_var];
-		return this->fix(var, val);
+		return this->fix(var, val, sp);
 	}
 
 	/**
@@ -273,7 +283,7 @@ namespace sp{
 		for(Literal* l : c->literals){
 			if(l->enabled)
 				// Se asigna
-				return fix(l->var, l->type);
+				return fix(l->var, l->type, false);
 		}
 		return false;
 	}

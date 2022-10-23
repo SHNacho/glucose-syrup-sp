@@ -108,8 +108,8 @@ namespace sp{
 		~FactorGraph();
 		vector<string> splitString(string str);
 		bool simplify(Variable* var);
-		bool fix(Variable* var, int val);
-		bool fix(int id_var, int val);
+		bool fix(Variable* var, int val, bool sp);
+		bool fix(int id_var, int val, bool sp);
 		bool fixUnitClause(Clause* c);
 		bool isSAT();
 	

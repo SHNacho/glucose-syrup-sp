@@ -1184,9 +1184,11 @@ CRef Solver::propagate() {
                 while(i < end)
                     *j++ = *i++;
             } else {
+                printClause(cr);
+                printf("\n");
+                printLit(first);
+                printf("\n");
                 uncheckedEnqueue(first, cr);
-
-
             }
             NextClause:;
         }
