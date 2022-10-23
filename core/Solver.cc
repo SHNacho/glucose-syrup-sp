@@ -721,19 +721,19 @@ Lit Solver::pickBranchLit() {
     if(converge){
         // · Si hay variables que asignar -> Recalcular bias y valor a asignar 
         if(!fg->fixedVars.empty()){
-            int var = fg->fixedVars.front().first-1;
+            int var = fg->fixedVars.front().first;
             int val = fg->fixedVars.front().second;
             fg->fixedVars.pop();
-            while (value(var) != l_Undef && !fg->fixedVars.empty())
+            while (value(var-1) != l_Undef && !fg->fixedVars.empty())
             {
-                var = fg->fixedVars.front().first-1;
+                var = fg->fixedVars.front().first;
                 val = fg->fixedVars.front().second;
                 fg->fixedVars.pop();
             }
-            if(value(var) == l_Undef){
+            if(value(var-1) == l_Undef){
                 spSolver->computeBias(var);
                 bool val = spSolver->valueToAssign(var) == 1 ? true : false;
-                return mkLit(var, val);
+                return mkLit(var-1, val);
             }
         }
     } else {
