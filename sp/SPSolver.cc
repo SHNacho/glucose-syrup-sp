@@ -9,6 +9,7 @@ namespace sp{
 	SPSolver::SPSolver(FactorGraph* fg, float alpha){
 		this->fg = fg;
 		rng = default_random_engine {};
+		rng.seed(9876);
 		this->alpha = alpha;
 		this-> SPIter = 0;
 		this->initRandomSurveys();
@@ -206,7 +207,7 @@ namespace sp{
 	}
 
 	void SPSolver::computeBias(int id_var){
-		computeBias(fg->variables[id_var - 1]);
+		computeBias(fg->variables[id_var-1]);
 	}
 
 	int SPSolver::valueToAssign(int id_var){

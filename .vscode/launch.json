@@ -10,6 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/simp/glucose",
             "args": [
+                "-no-elim",
                 "data/cnf_1.txt",
                 "simp/result.txt"
             ],

@@ -699,10 +699,9 @@ Lit Solver::pickBranchLit() {
             fg->fix(v, spVal);
        }
     }
-    if(assignedVars != fg->variables.size() - fg->unassigned_vars){
-        printf("Variables asignadas en Glucose: %d\n", assignedVars);
-        printf("Variables asignadas en SP: %d\n", fg->variables.size() - fg->unassigned_vars);
-    }
+
+    printf("Variables asignadas en Glucose: %d\n", assignedVars);
+    printf("Variables asignadas en SP: %d\n", fg->variables.size() - fg->unassigned_vars);
     // ¡OJO! La simplificación puede asignar variables por UP
 
     //TODO:
@@ -710,20 +709,20 @@ Lit Solver::pickBranchLit() {
     bool converge = true;
 
     if(spVars.size() == 0){
-        converge = spSolver->varsToAssign(spVars);
+        converge = spSolver->varsToAssign(spVars); 
     }
 
     if(converge){
         // · Si hay variables que asignar -> Recalcular bias y valor a asignar 
         if(!spVars.empty()){
-            int var = spVars.front()-1;
+            int var = spVars.front(); // ID de la variable
             spVars.pop();
-            while (value(var) != l_Undef && spVars.size() != 0)
+            while (value(var-1) != l_Undef && spVars.size() != 0)
             {
                 var = spVars.front();
                 spVars.pop();
             }
-            if(value(var) == l_Undef){
+            if(value(var-1) == l_Undef){
                 spSolver->computeBias(var);
                 bool val = spSolver->valueToAssign(var) == 1 ? true : false;
                 return mkLit(var, val);
@@ -1177,8 +1176,6 @@ CRef Solver::propagate() {
                     *j++ = *i++;
             } else {
                 uncheckedEnqueue(first, cr);
-
-
             }
             NextClause:;
         }
