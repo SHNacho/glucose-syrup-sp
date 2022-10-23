@@ -451,6 +451,7 @@ namespace sp{
 			v->value = 0;
 		}
 		fg->unassigned_vars = fg->variables.size();
+		initRandomSurveys();
 	}
 
 	bool biasComparator(Variable* v1, Variable* v2){
