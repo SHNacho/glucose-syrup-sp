@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/simp/glucose",
             "args": [
-                "data/cnf_1.txt",
+                "data/prueba.cnf",
                 "simp/result.txt",
             ],
             "stopAtEntry": false,
