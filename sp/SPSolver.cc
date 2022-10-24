@@ -78,9 +78,6 @@ namespace sp{
 					prod = pu / (pu + ps + pz);
 				}
 
-				if (isnan(prod)){
-					cout << "Prod is nan" << endl;
-				}
 				prods.push_back(prod);
 
 				if(prod < EPS){
@@ -262,14 +259,15 @@ namespace sp{
 
 			// Se ordenan las variables en función del sesgo
 			vector<Variable*> sortedVars = fg->variables;
-			sort(sortedVars.begin(), sortedVars.end(), biasComparator);
+			std::sort(sortedVars.begin(), sortedVars.end(), biasComparator);
 
 			// Si se llega a un estado paramagnético, se resuelve por walksat
 			if(summag/fg->unassigned_vars < PARAMAGNET){
 				//WALKSAT
 				cout << "Iteraciones de SP: " << SPIter << endl;
 				cout << "WALKSAT" << endl;
-				return WalkSat();
+				WalkSat();
+				return true;
 			}
 
 			// Asignación de las variables ordenadas por bias
@@ -313,14 +311,15 @@ namespace sp{
 
 			// Se ordenan las variables en función del sesgo
 			vector<Variable*> sortedVars = fg->variables;
-			sort(sortedVars.begin(), sortedVars.end(), biasComparator);
+			std::sort(sortedVars.begin(), sortedVars.end(), biasComparator);
 
 			// Si se llega a un estado paramagnético, se resuelve por walksat
 			if(summag/fg->unassigned_vars < PARAMAGNET){
 				//WALKSAT
 				cout << "Iteraciones de SP: " << SPIter << endl;
 				cout << "WALKSAT" << endl;
-				return WalkSat();
+				return false;
+				WalkSat();
 			}
 
 			// Asignación de las variables ordenadas por bias

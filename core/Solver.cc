@@ -705,9 +705,6 @@ Lit Solver::pickBranchLit() {
             stats[rnd_decisions]++;
     }
 
-    printf("Variables asignadas en Glucose: %d\n", nAssigns());
-    printf("Variables asignadas en SP: %d\n", fg->variables.size() - fg->unassigned_vars);
-
     //TODO:
     // · Devolver las variables a asignar WalkSAT
     bool converge = true;
@@ -729,9 +726,8 @@ Lit Solver::pickBranchLit() {
                 fg->fixedVars.pop();
             }
             if(value(var-1) == l_Undef){
-                spSolver->computeBias(var);
-                bool val = spSolver->valueToAssign(var) == 1 ? true : false;
-                return mkLit(var-1, val);
+                bool bval = val == 1 ? true : false;
+                return mkLit(var-1, !bval);
             }
         }
     } else {
@@ -1184,10 +1180,6 @@ CRef Solver::propagate() {
                 while(i < end)
                     *j++ = *i++;
             } else {
-                printClause(cr);
-                printf("\n");
-                printLit(first);
-                printf("\n");
                 uncheckedEnqueue(first, cr);
             }
             NextClause:;
