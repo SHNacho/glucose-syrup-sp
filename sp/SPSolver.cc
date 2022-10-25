@@ -9,9 +9,11 @@ namespace sp{
 	SPSolver::SPSolver(FactorGraph* fg, float alpha){
 		this->fg = fg;
 		rng = default_random_engine {};
-		rng.seed(9876);
+		time_t current_time = time(NULL);
+		rng.seed(current_time);
 		this->alpha = alpha;
 		this-> SPIter = 0;
+		this->WS_MAX_STEPS = 100 * fg->variables.size();
 		this->initRandomSurveys();
 	}
 
@@ -264,8 +266,6 @@ namespace sp{
 			// Si se llega a un estado paramagnético, se resuelve por walksat
 			if(summag/fg->unassigned_vars < PARAMAGNET){
 				//WALKSAT
-				cout << "Iteraciones de SP: " << SPIter << endl;
-				cout << "WALKSAT" << endl;
 				WalkSat();
 				return true;
 			}
@@ -318,8 +318,7 @@ namespace sp{
 				//WALKSAT
 				cout << "Iteraciones de SP: " << SPIter << endl;
 				cout << "WALKSAT" << endl;
-				return false;
-				WalkSat();
+				return WalkSat();
 			}
 
 			// Asignación de las variables ordenadas por bias
@@ -345,49 +344,156 @@ namespace sp{
 		return false;
 	}
 
-	bool SPSolver::WalkSat(){
-		// Variables y cláusulas que se usarán en WalkSAT
-		vector<Variable*> ws_variables;
-		vector<Clause*> ws_clauses;
-
-		for(Variable* var : fg->variables) if(var->value == 0){
-			ws_variables.push_back(var); 
-			var->ws = true;
+	bool SPSolver::WalkSat()
+	{
+		vector<Variable *> w_variables;
+		vector<Clause *> w_clauses;
+		for (Variable *v : fg->variables)
+		{
+			if (v->value == 0)
+				w_variables.push_back(v);
 		}
-		for(Clause* cl : fg->clauses) if(!cl->satisfied)
-			ws_clauses.push_back(cl);
+		for (Clause *c : fg->clauses)
+		{
+			if (!c->satisfied)
+				w_clauses.push_back(c);
+		}
 
-		for(int i = 0; i < WS_MAX_TRIES; ++i){
-			// Se genera una asignación aleatoria de las variables
-			int values[2] = {1, -1}; // Posibles valores
-			std::uniform_int_distribution<int> int_distribution(0, 1);
-			for(Variable* var : ws_variables){
-				int idx_value = int_distribution(rng);
-				var->value = values[idx_value];
+
+		vector<Clause *> unsatClauses;
+		for (int t = 0; t < WS_MAX_TRIES; t++)
+		{
+			// Assign all Varibles with random values
+			for (Variable *var : w_variables)
+			{
+				int values[2] = {1, -1}; // Posibles valores
+				std::uniform_int_distribution<int> int_distribution(0, 1);
+				var->value = values[int_distribution(rng)];
 			}
 
-			// Durante maxStep pasos:
-			int steps = 0;
-			std::uniform_int_distribution<int> clauses_int_distribution(0, ws_clauses.size() - 1);
+			// Separate unsat clauses
+			unsatClauses.clear();
+			for (Clause *clause : w_clauses)
+			{
+				if (clause->countTrueLiterals() == 0)
+					unsatClauses.push_back(clause);
+			}
 
-			while(steps < WS_MAX_STEPS){
-				// SI la asignación satisface la fórmula devolver SAT
-				if(fg->isSAT()) return true;
+			for (int f = 0; f < WS_MAX_STEPS; f++)
+			{
+				// If there are no unsat clauses, subgraph is solved and it's SAT
+				if (unsatClauses.size() == 0){
+					for(Variable* v : w_variables){
+						pair<int, int> var_value(v->id, v->value);
+						fg->fixedVars.push(var_value);
+					}
+					return true;
+				}
 
-				// Escoger una cláusula aleatoria
-				int rnd_clause = clauses_int_distribution(rng);
-				Clause* c = ws_clauses[rnd_clause];
+				// Select random unsat clause
+				std::uniform_int_distribution<> randomInt(0, unsatClauses.size() - 1);
+				int randIndex = randomInt(rng);
+				Clause *selectedClause = unsatClauses[randIndex];
+				std::vector<Literal *> selectedClauseLits;
+				for(Literal* l : selectedClause->literals) if(l->enabled)
+					selectedClauseLits.push_back(l);
 
-				// Escoger una variable de la cláusula
-				Variable* var = pickVar(c);
+				// -----------------------------------------------------------------------
+				// For each variable in selected clause, calculate break-count (number of
+				// currently satisfied clauses that become unsatisfied if the variable
+				// value is fliped) and store lowest break-count
+				// Fast-walksat is used to compute break-count
+				// -----------------------------------------------------------------------
+				vector<Variable *> lowestBreakCountVar;
+				int lowestBreakCount = fg->variables.size() * alpha + 1;
+				for (Literal *edge : selectedClauseLits)
+				{
+					int breakCount = 0;
+					for (Literal *e : edge->var->literals)
+					{
+						// Only clauses that are satisfied by the var and have only one
+						// literal will become unsat
+						if (e->enabled && edge->var->value == e->type &&
+							e->cl->trueLiterals == 1)
+							breakCount++;
 
-				// Cambiar el valor de la variable
+						// TODO: Remove old way of computing break-count
+						// if (e->clause->IsSAT()) {
+						//   edge->variable->AssignValue(!edge->variable->value);
+						//   if (!e->clause->IsSAT()) breakCount++;
+						//   edge->variable->AssignValue(!edge->variable->value);
+						// }
+					}
+
+					// Update lowest break-count
+					if (breakCount == lowestBreakCount)
+						lowestBreakCountVar.push_back(edge->var);
+					if (breakCount < lowestBreakCount)
+					{
+						lowestBreakCountVar.clear();
+						lowestBreakCountVar.push_back(edge->var);
+						lowestBreakCount = breakCount;
+					}
+				}
+
+				// -----------------------------------------------------------------------
+				// Select the variable of the clause that has break-count = 0
+				// If not, with probability p (noise), flip a random variable and
+				// with probability 1 - p, flip the variable with lowest break-count
+				// -----------------------------------------------------------------------
+				Variable *var = nullptr;
+				// Select the var with lower break-count with probability 1 - p or force
+				// it if break-count == 0
+				// If multiple vars have same breack-count, select randomly
+				std::uniform_real_distribution<> randomReal(0, 1);
+				if (lowestBreakCount == 0 || randomReal(rng) > WS_NOISE)
+				{
+					if (lowestBreakCountVar.size() == 1)
+					{
+						var = lowestBreakCountVar[0];
+					}
+					else
+					{
+						uniform_int_distribution<> randi(0, lowestBreakCountVar.size() - 1);
+						int i = randi(rng);
+						var = lowestBreakCountVar[i];
+					}
+				}
+				// Select random var with probability p
+				else
+				{
+					std::uniform_int_distribution<> randEdgeIndexDist(
+						0, selectedClauseLits.size() - 1);
+					int randomEdgeIndex = randEdgeIndexDist(rng);
+					var = selectedClauseLits[randomEdgeIndex]->var;
+				}
+
+				// -----------------------------------------------------------------------
+				// Flip de selected variable and update unsatClause list by removing all
+				// unsat clauses where the variable appear, flip it and then, add the new
+				// unsat clauses
+				// -----------------------------------------------------------------------
+				for (Literal *e : var->literals)
+				{
+					if (e->enabled && e->cl->trueLiterals == 0)
+					{
+						unsatClauses.erase(
+							find(unsatClauses.begin(), unsatClauses.end(), e->cl));
+					}
+				}
+
+				// Flip
 				var->value = var->value == 1 ? -1 : 1;
 
-				steps++;
+				for (Literal *e : var->literals)
+				{
+					if (e->enabled && e->cl->countTrueLiterals() == 0)
+						unsatClauses.push_back(e->cl);
+				}
 			}
 		}
 
+		// 2. If a sat assignment was not found, return false.
 		return false;
 	}
 
@@ -462,6 +568,7 @@ namespace sp{
 		}
 		while(!fg->fixedVars.empty()) fg->fixedVars.pop();
 		fg->unassigned_vars = fg->variables.size();
+		initRandomSurveys();
 	}
 
 	bool biasComparator(Variable* v1, Variable* v2){

@@ -671,19 +671,24 @@ void Solver::cancelUntil(int level) {
         qhead = trail_lim[level];
         trail.shrink(trail.size() - trail_lim[level]);
         trail_lim.shrink(trail_lim.size() - level);
-        // spSolver->resetGraph(); // SurveyPropagation
-        // int uv = nVars();
-        // for(int v = 0; v < nVars(); ++v){
-        //    int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
-        //    if(spVal != 0){
-        //         if(!fg->fix(v, spVal)){
-        //             cancelUntil(level - 1);
-        //         }
-        //    }
-        // }
-        // printf("%d\n",uv);
-        // printf("fixedVars: %d\n", fg->fixedVars.size());
-		// while(!fg->fixedVars.empty()) fg->fixedVars.pop();
+        // Se reinicia el grafo de SP
+        spSolver->resetGraph(); 
+        // Se asignan las variables de SP como las de Glucose
+        int uv = nVars();
+        for(int v = 0; v < nVars(); ++v){
+           int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
+           if(spVal != 0){
+                fg->fix(v, spVal, false);
+                // if(!fg->fix(v, spVal, false)){
+                //     cancelUntil(level - 1);
+                // }
+           }
+        }
+		while(!fg->fixedVars.empty()) fg->fixedVars.pop();
+        // Si se vuelve a un nivel anterior a la  última asignación de 
+        // SP, se vuelve a ejecutar SP
+        if(level < lastLevelSP)
+            stepsUntilSP = 0;
     }
 }
 
@@ -714,7 +719,6 @@ Lit Solver::pickBranchLit() {
     }
 
     if(converge){
-        // · Si hay variables que asignar -> Recalcular bias y valor a asignar 
         if(!fg->fixedVars.empty()){
             int var = fg->fixedVars.front().first;
             int val = fg->fixedVars.front().second;
@@ -731,8 +735,9 @@ Lit Solver::pickBranchLit() {
             }
         }
     } else {
-       stepsUntilSP = 1000; 
-       spSolver->initRandomSurveys();
+        lastLevelSP = decisionLevel();
+        stepsUntilSP = (nVars() - nAssigns()) * alpha; 
+        spSolver->initRandomSurveys();
     }
 
     // Activity based decision:

@@ -49,6 +49,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 #include <errno.h>
 
+#include <fstream>
 #include <signal.h>
 #include <zlib.h>
 #include <sys/resource.h>
@@ -87,6 +88,10 @@ void printStats(Solver& solver)
     //    printf("c conflict literals     : %-12" PRIu64"   (%4.2f %% deleted)\n", solver.stats[tot_literals], (solver.stats[max_literals] - solver.stats[tot_literals])*100 / (double)solver.stats[max_literals]);
     //    printf("c Average resolutions   : %-12" PRIu64"   (%.0f seen ones)\n",solver.stats[sumRes]/solver.conflicts,((double)solver.stats[sumResSeen])/solver.conflicts);
     printf("c nb reduced Clauses    : %" PRIu64"\n",solver.stats[nbReducedClauses]);
+
+    printf("c SP iterations         : %" PRIu64"\n", solver.spSolver->SPIter);
+    
+        
 
     if (mem_used != 0) printf("Memory used           : %.2f MB\n", mem_used);
     printf("c CPU time              : %g s\n", cpu_time);
@@ -270,6 +275,12 @@ int main(int argc, char** argv)
             printStats(S);
             printf("\n"); }
         printf(ret == l_True ? "s SATISFIABLE\n" : ret == l_False ? "s UNSATISFIABLE\n" : "s INDETERMINATE\n");
+
+        string result = ret == l_True ? "SATISFIABLE" : ret == l_False ? "UNSATISFIABLE" : "INDETERMINATE";
+        fstream of;
+        of.open("results.txt", fstream::app);
+        of << result << ", " << solver->spSolver->SPIter << endl;
+        
 
         if (res != NULL){
             if (ret == l_True){

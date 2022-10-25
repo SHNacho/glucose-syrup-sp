@@ -102,6 +102,17 @@ namespace sp{
 		return count;
 	}
 
+	int Clause::countTrueLiterals(){
+  		trueLiterals = 0;
+  		for (Literal* lit : literals) {
+  		  if (lit->var->value != 0 && lit->type == lit->var->value)
+  		    trueLiterals++;
+  		}
+
+  		return trueLiterals > 0;
+	}
+
+
 	//// FACTOR GRAPH //
 
 	FactorGraph::FactorGraph(string file){
@@ -221,17 +232,6 @@ namespace sp{
 		unassigned_vars--;
 		pair<int, int> var_value(var->id, val);
 		fixedVars.push(var_value);
-
-		fstream of;
-		of.open("assigns.txt", fstream::app);
-
-		if(sp)
-			of << var->id << " - " << val << " - SP" << endl;
-		else
-			of << var->id << " - " << val << " - UP" << endl;
-
-		of.close();
-
 
 		return simplify(var);
 	}

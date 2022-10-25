@@ -15,6 +15,7 @@ namespace sp{
 	public:
 		vector<Literal*> literals;
 		int unassigned_literals;
+		int trueLiterals;
 		bool satisfied;
 	
 		// WalkSAT variables
@@ -24,6 +25,7 @@ namespace sp{
 		Clause();
 		Clause(const Clause &copy);
 		bool isSAT();
+		int countTrueLiterals();
 	
 		//WalkSAT methods
 		/**
