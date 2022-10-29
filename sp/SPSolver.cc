@@ -296,7 +296,6 @@ namespace sp{
 	bool SPSolver::varsToAssign(){
 		while(!fg->fixedVars.empty()) fg->fixedVars.pop();
 		// Se cualculan cuantas variables se asignarán en cada paso
-		// int fixPerStep = fg->unassigned_vars * alpha > 1 ? fg->unassigned_vars * alpha : 1;
 		int fixPerStep = fg->variables.size() * alpha > 1 ? fg->unassigned_vars * alpha : 1;
 		if (surveyPropagation() && fg->unassigned_vars){
 			double summag = 0;		// Suma de los sesgos

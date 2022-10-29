@@ -218,11 +218,29 @@ public:
     unsigned int lbLBDMinimizingClause;
 
     // Survey Propagation variables
-    double    alpha;                // Alpha parameter for SP heuristic
+    double           alpha;                // Alpha parameter for SP heuristic
     sp::FactorGraph* fg;
-    sp::SPSolver* spSolver;
-    int stepsUntilSP;
-    int lastLevelSP;
+    sp::SPSolver*    spSolver;
+    int              stepsUntilSP;  // Iteraciones hasta volver a ejecutar SP
+    int              lastLevelSP;   // Último nivel en el que convergió SP
+    bool             updateGraph;   // Indica si hay que actualizar el grafo
+    unsigned int     cpuTimeSP;
+    bool             unconverged;   // Inidica si SP no convergió
+    // Veces que SP converge tras no haber convergido, en un nivel 
+    // anterior al de no convergencia
+    int              convsBeforeLevel; 
+    // Veces que SP converge tras no haber convergido, en un nivel 
+    // posterior al de no convergencia
+    int              convsAfterLevel; 
+    // Variables asignadas por SP
+    int nAssignedVarsSP;
+    // Variables asignadas por VSID
+    int nAssignedVarsVSID;
+    int timesBacktrack;
+    // Número de veces que se hace backtracking a un nivel
+    // anterior a la no convergencia de SP
+    int timesBacktrackBeforeSPUnconverge;
+
 
     // Constant for heuristic
     double    var_decay;

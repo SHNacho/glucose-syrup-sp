@@ -22,8 +22,8 @@ namespace sp{
 	
 		// WalkSAT constants
 		const double WS_NOISE = 0.567;
-		const int WS_MAX_TRIES = 10;
-		const int WS_MAX_STEPS = 1000;
+		const int WS_MAX_TRIES = 5;
+		int WS_MAX_STEPS; 
 	
 		default_random_engine rng;
 	

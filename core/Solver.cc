@@ -54,6 +54,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "core/Solver.h"
 #include "core/Constants.h"
 #include "simp/SimpSolver.h"
+#include "chrono"
 
 using namespace Glucose;
 
@@ -660,6 +661,7 @@ void Solver::minimisationWithBinaryResolution(vec <Lit> &out_learnt) {
 
 void Solver::cancelUntil(int level) {
     if(decisionLevel() > level) {
+        timesBacktrack++;
         for(int c = trail.size() - 1; c >= trail_lim[level]; c--) {
             Var x = var(trail[c]);
             assigns[x] = l_Undef;
@@ -679,16 +681,21 @@ void Solver::cancelUntil(int level) {
            int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
            if(spVal != 0){
                 fg->fix(v, spVal, false);
-                // if(!fg->fix(v, spVal, false)){
-                //     cancelUntil(level - 1);
-                // }
            }
         }
 		while(!fg->fixedVars.empty()) fg->fixedVars.pop();
         // Si se vuelve a un nivel anterior a la  última asignación de 
         // SP, se vuelve a ejecutar SP
-        if(level < lastLevelSP)
+        if(level < lastLevelSP){
+            if(level > 0 && level < lastLevelSP)
+                timesBacktrackBeforeSPUnconverge++;
             stepsUntilSP = 0;
+        }
+        // Si se reinicia no cuenta las convergencias posteriores
+        // como convergencias tras volver a un nivel anterior al de 
+        // no convergencia de SP
+        if(level <= 0)
+            unconverged = false;
     }
 }
 
@@ -710,12 +717,37 @@ Lit Solver::pickBranchLit() {
             stats[rnd_decisions]++;
     }
 
-    //TODO:
-    // · Devolver las variables a asignar WalkSAT
     bool converge = true;
 
     if(fg->fixedVars.empty() && stepsUntilSP == 0){
+        if(updateGraph){
+            spSolver->resetGraph(); 
+            // Se asignan las variables de SP como las de Glucose
+            int uv = nVars();
+            for(int v = 0; v < nVars(); ++v){
+               int spVal = assigns[v] == l_True ? 1 : assigns[v] == l_False ? -1 : 0;
+               if(spVal != 0){
+                    fg->fix(v, spVal, false);
+               }
+            }
+            updateGraph = false;
+        }
+        
+        auto begin = std::chrono::high_resolution_clock::now();
+
         converge = spSolver->varsToAssign();
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - begin);
+        cpuTimeSP += elapsed.count();
+
+        if(converge && unconverged){
+            if(decisionLevel() > lastLevelSP)
+                convsBeforeLevel++;
+            else
+                convsAfterLevel++;
+            unconverged = false;
+        }
     }
 
     if(converge){
@@ -730,14 +762,18 @@ Lit Solver::pickBranchLit() {
                 fg->fixedVars.pop();
             }
             if(value(var-1) == l_Undef){
+                nAssignedVarsSP++;
                 bool bval = val == 1 ? true : false;
                 return mkLit(var-1, !bval);
             }
         }
     } else {
-        lastLevelSP = decisionLevel();
+        lastLevelSP = decisionLevel(); // Último nivel en el que converge SP
+        // Número de iteraciones hasta volver a ejecutar SP
         stepsUntilSP = (nVars() - nAssigns()) * alpha; 
         spSolver->initRandomSurveys();
+        updateGraph = true;
+        unconverged = true;
     }
 
     // Activity based decision:
@@ -768,6 +804,7 @@ Lit Solver::pickBranchLit() {
 
     }
 
+    nAssignedVarsVSID++;
     return next == var_Undef ? lit_Undef : mkLit(next, rnd_pol ? drand(random_seed) < 0.5 : polarity[next]);
 }
 

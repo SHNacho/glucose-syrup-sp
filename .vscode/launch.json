@@ -11,7 +11,9 @@
             "program": "${workspaceFolder}/simp/glucose",
             "args": [
                 "-no-elim",
-                "data/S-4.21/cnf_02.txt",
+                "data/S-4.21/cnf_01.txt",
+                "data/S-4.21/result.csv",
+                "result"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

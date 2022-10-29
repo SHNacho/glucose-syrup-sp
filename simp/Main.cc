@@ -276,11 +276,25 @@ int main(int argc, char** argv)
             printf("\n"); }
         printf(ret == l_True ? "s SATISFIABLE\n" : ret == l_False ? "s UNSATISFIABLE\n" : "s INDETERMINATE\n");
 
-        string result = ret == l_True ? "SATISFIABLE" : ret == l_False ? "UNSATISFIABLE" : "INDETERMINATE";
-        fstream of;
-        of.open("results.txt", fstream::app);
-        of << result << ", " << solver->spSolver->SPIter << endl;
+        if(argc > 3){
+            string file_result = argv[argc-2];
+            string result = ret == l_True ? "SATISFIABLE" : ret == l_False ? "UNSATISFIABLE" : "INDETERMINATE";
+            fstream of;
         
+            of.open(file_result, fstream::app);
+            of << result << ", " << solver->spSolver->SPIter 
+                << ", " << solver->starts
+                << ", " << solver->nAssignedVarsSP
+                << ", " << solver->nAssignedVarsVSID
+                << ", " << cpuTime() 
+                << ", " << solver->cpuTimeSP 
+                << ", " << cpuTime() - solver->cpuTimeSP 
+                << ", " << solver->timesBacktrack
+                << ", " << solver->timesBacktrackBeforeSPUnconverge
+                << ", " << solver->convsAfterLevel 
+                << ", " << solver->convsBeforeLevel << endl;
+        
+        }
 
         if (res != NULL){
             if (ret == l_True){
